@@ -1,6 +1,6 @@
 /* FORMATIERUNGEN */
 /* -------------- */
-function Format(number) {
+function format(number) {
   if (!isNaN(number)) {
     return number.toLocaleString("de-DE", {
       style: "currency",
@@ -9,7 +9,7 @@ function Format(number) {
   } else return "0,00 €";
 }
 // Prozent-Formatierung
-function PFormat(number) {
+function pFormat(number) {
   if (!isNaN(number)) {
     return number.toLocaleString("de-DE", {
       style: "percent",
@@ -19,7 +19,7 @@ function PFormat(number) {
   } else return "0,00 %";
 }
 // Deformatierung (fürs rechnen)
-function Deformat(number) {
+function deformat(number) {
   while (number.includes(".")) {
     number = number.replace(".", "");
   }
@@ -30,7 +30,7 @@ function Deformat(number) {
 }
 /* Input konfigurieren */
 /* ------------------- */
-function Input(input) {
+function input(input) {
   // Dezimalpunkt in Komma umwandeln (aufgrund von Deformat())
   if (input.value.includes(".")) input.value = input.value.replace(".", ",");
   // Buchstaben rausschmeißen
@@ -53,35 +53,35 @@ function Input(input) {
 
 /* Funktionen abrufen */
 /* ------------------ */
-function Call() {
-  Kaufpreis();
-  Laufzeit();
-  Eigenleistung();
-  Restwert();
-  Entgelt();
-  Rechtsgeschäftsgebühr();
-  Effektivzinssatz();
-  Gesamtbelastung();
-  Gesamtzinsen();
-  Finanzierungsbeitrag();
+function call() {
+  kaufpreis();
+  laufzeit();
+  eigenleistung();
+  restwert();
+  entgelt();
+  rechtsgeschäftsgebühr();
+  effektivzinssatz();
+  gesamtbelastung();
+  gesamtzinsen();
+  finanzierungsbeitrag();
 }
 
 /* Vertragsmodell konfiguration */
 /* ---------------------------- */
 vg.oninput = function() {
-  Call();
+  call();
 };
 /* Tarifmodell konfiguration */
 /* ------------------------- */
 tm.oninput = function() {
   Bearbeitungsgebühr();
-  Call();
+  call();
 };
 /* Kaufpreis konfiguration */
 /* ----------------------- */
 kp.oninput = function() {
-  Input(kp);
-  Call();
+  input(kp);
+  call();
 };
 
 // Handling bei ungültiger Eingabe
@@ -100,14 +100,14 @@ function falsch(output) {
 
 // überprüft, ob die inputs vom kp disabled wurden
 var lock = true;
-function Kaufpreis() {
+function kaufpreis() {
   /* INPUT KONFIGURATION */
 
   // zu deaktivierende Elemente
   var input = new Array(eli, elr, rwi, rwr);
   // zu löschende inhalte
   // Inputs aktivieren wenn kp != leer
-  if (Deformat(kp.value) > 0) {
+  if (deformat(kp.value) > 0) {
     lock = false;
     for (i = 0; i < input.length; i++) {
       input[i].disabled = false;
@@ -126,14 +126,14 @@ function Kaufpreis() {
     der Dezimalpunkt entfernt werden                  */
 var n = 0;
 kp.onblur = function() {
-  kp.value = Format(kp.value.replace(",", ".") * 1.0);
+  kp.value = format(kp.value.replace(",", ".") * 1.0);
   n = 0;
 };
 /*  Bei focus -> Deformat()    
     Da es sonst beim Format() zum Fehler kommt:   */
 kp.onfocus = function() {
   kp.value = kp.value || 0;
-  if (n == 0) kp.value = Deformat(kp.value);
+  if (n == 0) kp.value = deformat(kp.value);
   n++;
   kp.select();
 };
@@ -141,13 +141,13 @@ kp.onfocus = function() {
 /* Laufzeit konfiguration */
 /* ---------------------- */
 lzr.oninput = function() {
-  Call();
+  call();
 };
 lzi.oninput = function() {
-  Call();
+  call();
   falsch(lzo);
 };
-function Laufzeit() {
+function laufzeit() {
   if (lzi.value > 0) {
     lzr.disabled = true;
     if (lzi.value > 23) {
@@ -163,63 +163,63 @@ function Laufzeit() {
 /* Eigenleistung konfigurieren */
 /* --------------------------- */
 elr.oninput = function() {
-  Call();
+  call();
 };
 eli.oninput = function() {
-  Call();
+  call();
   falsch(elo);
 };
-function Eigenleistung() {
+function eigenleistung() {
   if (eli.value > 0) {
     elr.disabled = true;
-    if (eli.value / Deformat(kp.value) > 0.4666666666) elo.value = "zu viel";
-    else elo.value = Format(eli.value * 1);
+    if (eli.value / deformat(kp.value) > 0.4666666666) elo.value = "zu viel";
+    else elo.value = format(eli.value * 1);
   } else {
-    elo.value = Format((elr.value * Deformat(kp.value)) / 1000.0);
+    elo.value = format((elr.value * deformat(kp.value)) / 1000.0);
     if (lock == false) elr.disabled = false;
   }
-  isNaN(Deformat(elo.value))
+  isNaN(deformat(elo.value))
     ? (elp.value = "-")
-    : (elp.value = PFormat(Deformat(elo.value) / Deformat(kp.value)));
+    : (elp.value = pFormat(deformat(elo.value) / deformat(kp.value)));
 }
 
 /* Restwert konfigurieren */
 /* ---------------------- */
 rwr.oninput = function() {
-  Call();
+  call();
 };
 rwi.oninput = function() {
-  Call();
+  call();
   falsch(rwo);
 };
-function Restwert() {
+function restwert() {
   if (rwi.value > 0) {
     rwr.disabled = true;
-    if (rwi.value / Deformat(kp.value) < 0.1) rwo.value = "zu wenig";
-    else if (rwi.value / Deformat(kp.value) > 0.5) rwo.value = "zu viel";
-    else rwo.value = Format(rwi.value);
+    if (rwi.value / deformat(kp.value) < 0.1) rwo.value = "zu wenig";
+    else if (rwi.value / deformat(kp.value) > 0.5) rwo.value = "zu viel";
+    else rwo.value = format(rwi.value);
   } else {
     if (lock == false) rwr.disabled = false;
-    rwo.value = Format((Deformat(kp.value) * rwr.value) / 1000.0);
+    rwo.value = format((deformat(kp.value) * rwr.value) / 1000.0);
   }
-  isNaN(Deformat(rwo.value))
+  isNaN(deformat(rwo.value))
     ? (rwp.value = "-")
-    : (rwp.value = PFormat(Deformat(rwo.value) / Deformat(kp.value)));
+    : (rwp.value = pFormat(deformat(rwo.value) / deformat(kp.value)));
 }
 
 /* Entgelt konfigurieren */
 /* --------------------- */
 var egVal; // gegen Rundungsfehler
-function Entgelt() {
+function entgelt() {
   var zins = (0.0225 + (1 - vg.value) * 0.0025) / 12.0,
-    zzr = Deformat(lzo.value);
-  bw = (Deformat(kp.value) - Deformat(elo.value)) * (1 + tm.value / 100.0);
-  zw = -Deformat(rwo.value);
-  egVal = -RMZ(zins, zzr, bw, zw, 0);
-  eg.value = Format(egVal);
+    zzr = deformat(lzo.value);
+  bw = (deformat(kp.value) - deformat(elo.value)) * (1 + tm.value / 100.0);
+  zw = -deformat(rwo.value);
+  egVal = -rmz(zins, zzr, bw, zw, 0);
+  eg.value = format(egVal);
 }
 
-function RMZ(zins, zzr, bw, zw, f) {
+function rmz(zins, zzr, bw, zw, f) {
   if (!zw) zw = 0;
   if (!f) f = 0;
 
@@ -237,30 +237,30 @@ function RMZ(zins, zzr, bw, zw, f) {
 
 /* Rechtsgeschäftsgebühr konfigurieren */
 /* ----------------------------------- */
-function Rechtsgeschäftsgebühr() {
-  rg.value = Format(
-    Math.round((Deformat(eg.value) * 36 + Deformat(elo.value)) * 0.01) *
+function rechtsgeschäftsgebühr() {
+  rg.value = format(
+    Math.round((deformat(eg.value) * 36 + deformat(elo.value)) * 0.01) *
       vg.value
   );
 }
 /* Bearbeitungsgebühr konfigurieren */
 /* -------------------------------- */
-Bearbeitungsgebühr = () => (bg.value = Format(tm.value * 50));
+Bearbeitungsgebühr = () => (bg.value = format(tm.value * 50));
 
 /* Effektivzinssatz konfigurieren */
 /* ------------------------------ */
-function Effektivzinssatz() {
-  ez.value = PFormat(
+function effektivzinssatz() {
+  ez.value = pFormat(
     Math.pow(
       1 +
         Zins(
-          Deformat(lzo.value),
+          deformat(lzo.value),
           -egVal,
-          Deformat(kp.value) -
-            Deformat(elo.value) -
-            Deformat(bg.value) -
-            Deformat(rg.value),
-          -Deformat(rwo.value),
+          deformat(kp.value) -
+            deformat(elo.value) -
+            deformat(bg.value) -
+            deformat(rg.value),
+          -deformat(rwo.value),
           1
         ),
       12
@@ -320,23 +320,23 @@ function Zins(zins, rmz, bw, zw, f, sw) {
 
 /* Gesamtbelastung konfigurieren */
 /* ----------------------------- */
-function Gesamtbelastung() {
-  gb.value = Format(
-    egVal * Deformat(lzo.value) +
-      Deformat(elo.value) +
-      Deformat(rwo.value) +
-      Deformat(rg.value) +
-      Deformat(bg.value)
+function gesamtbelastung() {
+  gb.value = format(
+    egVal * deformat(lzo.value) +
+      deformat(elo.value) +
+      deformat(rwo.value) +
+      deformat(rg.value) +
+      deformat(bg.value)
   );
 }
 
 /* Gesamtzinsen konfigurieren */
 /* -------------------------- */
-function Gesamtzinsen() {
-  gz.value = Format(Deformat(gb.value) - Deformat(kp.value));
+function gesamtzinsen() {
+  gz.value = format(deformat(gb.value) - deformat(kp.value));
 }
 /* Finanzierungsbeitrag konfigurieren */
 /* ---------------------------------- */
-function Finanzierungsbeitrag() {
-  fb.value = Format(Deformat(kp.value) - Deformat(elo.value));
+function finanzierungsbeitrag() {
+  fb.value = format(deformat(kp.value) - deformat(elo.value));
 }
