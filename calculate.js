@@ -74,7 +74,7 @@ vg.oninput = function() {
 /* Tarifmodell konfiguration */
 /* ------------------------- */
 tm.oninput = function() {
-  Bearbeitungsgebühr();
+  bearbeitungsgebühr();
   call();
 };
 /* Kaufpreis konfiguration */
@@ -95,7 +95,7 @@ function falsch(output) {
       clear[i].value = "";
     }
   }
-  Bearbeitungsgebühr();
+  bearbeitungsgebühr();
 }
 
 // überprüft, ob die inputs vom kp disabled wurden
@@ -245,7 +245,9 @@ function rechtsgeschäftsgebühr() {
 }
 /* Bearbeitungsgebühr konfigurieren */
 /* -------------------------------- */
-Bearbeitungsgebühr = () => (bg.value = format(tm.value * 50));
+function bearbeitungsgebühr() {
+  bg.value = format(tm.value * 50);
+}
 
 /* Effektivzinssatz konfigurieren */
 /* ------------------------------ */
@@ -253,7 +255,7 @@ function effektivzinssatz() {
   ez.value = pFormat(
     Math.pow(
       1 +
-        Zins(
+        zins(
           deformat(lzo.value),
           -egVal,
           deformat(kp.value) -
@@ -267,7 +269,7 @@ function effektivzinssatz() {
     ) - 1.0
   );
 }
-function Zins(zins, rmz, bw, zw, f, sw) {
+function zins(zins, rmz, bw, zw, f, sw) {
   sw = typeof sw !== "undefined" ? sw : 0.1;
 
   // Sets the limits for possible guesses to any
