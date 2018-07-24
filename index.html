@@ -1,0 +1,114 @@
+<html>
+
+    <head>
+        <title> Kalkulator </title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="shortcut icon" href="Images/icon.png" />
+        <meta charset="utf-8" />
+    </head>
+
+    <body>
+
+        <header> Fahrzeug-Kalkulator</header>
+        <main>
+
+            <div>
+                <!-- id:kk -->
+                <span> Kunde Kurzbezeichnung: </span>
+                <input type="text" class="user-input name" name="kunde" id="kki" />
+                <select name="vertrag" class="user-input" id="vg">
+                    <option name="leasing" value="1"> Leasing </option>
+                    <option name="easykauf" value="0"> Easykauf </option>
+                </select>
+                <br/>
+
+                <!-- id:fz -->
+                <span> Fahrzeug: </span>
+                <input type="text" class="user-input name" name="fahrzeug" id="fz" />
+                <br/>
+
+                <!-- id:tm -->
+                <span> Tarifmodell: </span>
+                <select name="tarifmodell" class="user-input" id="tm">
+                    <option name="standard" value="2"> Standard </option>
+                    <option name="prime" value="1"> Prime </option>
+                    <option name="exclusive" value="0"> Exclusive </option>
+                </select>
+                <br/>
+
+                <!-- if:kp -->
+                <span> Kaufpreis: </span>
+                <input type="text" class="user-input" name="kaufpreis" id="kp" min="0" />
+                <br/>
+
+                <!-- id:lz -->
+                <span> Laufzeit: </span>
+                <input type="" class="output" name="laufzeit-output" id="lzo" tabindex="-1" readonly/>
+                <input class="small" id="placeholder" />
+                <input type="number" class="user-input small" name="laufzeit-input" id="lzi" max="72" min="24" title="min: 24  max: 72" />
+                <input type="range" class="" name="laufzeit-range" id="lzr" max="72" min="24" />
+                <br/>
+
+                <!-- id:el -->
+                <span> Eigenleistung: </span>
+                <input class="output" name="eigenleistung-output" id="elo" tabindex="-1" readonly/>
+                <input class="small percent output" name="eigenleistung-percent" id="elp" tabindex="-1" readonly />
+                <input type="number" class="small user-input" name="eigenleistung-input" id="eli" min="0" title="min: 0  max: 46,6%" disabled/>
+                <input type="range" class="" name="eigenleistung-range" id="elr" min="0" max="466" disabled/>
+                <br/>
+
+                <!-- id:rw -->
+                <span> Restwert: </span>
+                <input class="output" name="restwert-output" tabindex="-1" id="rwo" readonly />
+                <input class="small percent output" name="restwert-percent" id="rwp" tabindex="-1" readonly />
+                <input type="number" class="small user-input" name="restwert-input" id="rwi" min="0" title="min: 10%  max: 50%" disabled/>
+                <input type="range" class="" name="restwert-range" id="rwr" min="100" max="500" disabled/>
+                <br/>
+
+                <!-- id:eg -->
+                <span> Entgelt: </span>
+                <input class="output" name="entgelt" id="eg" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:rg -->
+                <span> Rechtsgeschäftsgebühr: </span>
+                <input class="output" name="rechtsgeschäftsgebühr" id="rg" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:bg -->
+                <span> Bearbeitungsgebühr: </span>
+                <input class="output" name="bearbeitungsgebühr" id="bg" value="100,00 €" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:ez -->
+                <span> Effektivzinssatz: </span>
+                <input class="output" name="effektivzinssatz" id="ez" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:gb -->
+                <span> Gesamtbelastung: </span>
+                <input class="output" name="gesamtbelastung" id="gb" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:gz -->
+                <span> Gesamtzinsen: </span>
+                <input class="output" name="gesamtzinsen" id="gz" tabindex="-1" readonly/>
+                <br/>
+
+                <!-- id:fb -->
+                <span> Finanzierungsbetrag: </span>
+                <input class="output" name="finanzierungsbetrag" id="fb" tabindex="-1" readonly/>
+                <br/>
+            </div>
+
+        </main>
+
+    </body>
+    <footer>
+        <p> Copyright © 2018
+            <a href="https://www.creativpuls.at" target="_blank"> CreativPuls GesmbH </a>
+        </p>
+    </footer>
+    <script src="calculate.js"></script>
+
+</html>
