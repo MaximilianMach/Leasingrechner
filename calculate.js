@@ -143,6 +143,8 @@ kaufpreis.onfocus = function() {
   kaufpreis.value = kaufpreis.value || 0;
   if (n == 0) kaufpreis.value = deformat(kaufpreis.value);
   n++;
+
+  kaufpreis.value = kaufpreis.value.replace(".", ",");
   kaufpreis.select();
 };
 
@@ -159,7 +161,7 @@ laufzeitInput.oninput = function() {
   falsch(laufzeitOutput);
 };
 function setUpLaufzeit() {
-  if (laufzeitInput.value > 0) {
+  if (laufzeit.value > 0) {
     laufzeitRange.disabled = true;
     if (laufzeitInput.value > 23) {
       if (laufzeitInput.value < 73)
@@ -183,6 +185,7 @@ eigenleistungRange.oninput = function() {
   setUp();
 };
 eigenleistungInput.oninput = function() {
+  input(eigenleistungInput);
   setUp();
   falsch(eigenleistungOutput);
 };
