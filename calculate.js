@@ -34,191 +34,228 @@ function input(input) {
   // Dezimalpunkt in Komma umwandeln (aufgrund von Deformat())
   if (input.value.includes(".")) input.value = input.value.replace(".", ",");
   // Buchstaben rausschmeißen
-  var temp = input.value.replace(",", ".");
-  if (!(temp == parseFloat(temp))) {
+  var num = input.value.replace(",", ".");
+  if (!(num == parseFloat(num))) {
     if (input.value[input.value.length - 1] != ",")
       input.value = input.value.replace(
         input.value[input.value.length - 1],
         ""
       );
   }
-  var tmp = input.value.indexOf(",");
+  let tmp = input.value.indexOf(",");
   // nicht mehr als ein Komma möglich
   if (input.value.includes(",", ++tmp)) {
-    var n = input.value.indexOf(",", tmp);
-    var s = input.value.substring(0, n);
-    input.value = s;
+    let n = input.value.indexOf(",", tmp);
+    let show = input.value.substring(0, n);
+    input.value = show;
   }
 }
 
 /* Funktionen abrufen */
 /* ------------------ */
-function call() {
-  kaufpreis();
-  laufzeit();
-  eigenleistung();
-  restwert();
-  entgelt();
-  rechtsgeschäftsgebühr();
-  effektivzinssatz();
-  gesamtbelastung();
-  gesamtzinsen();
-  finanzierungsbeitrag();
+function setUp() {
+  setUpKaufpreis();
+  setUpLaufzeit();
+  setUpEigenleistung();
+  setUpRestwert();
+  setUpEntgelt();
+  setUpRechtsgeschäftsgebühr();
+  setUpEffektivzinssatz();
+  setUpGesamtbelastung();
+  setUpGesamtzinsen();
+  setUpFinanzierungsbeitrag();
 }
 
 /* Vertragsmodell konfiguration */
 /* ---------------------------- */
-vg.oninput = function() {
-  call();
-};
-/* Tarifmodell konfiguration */
-/* ------------------------- */
-tm.oninput = function() {
-  bearbeitungsgebühr();
-  call();
-};
-/* Kaufpreis konfiguration */
-/* ----------------------- */
-kp.oninput = function() {
-  input(kp);
-  call();
+var vertragsmodell = document.getElementById("vg");
+vertragsmodell.oninput = function() {
+  setUp();
 };
 
+/* Tarifmodell konfiguration */
+/* ------------------------- */
+var tarifmodell = document.getElementById("tm");
+tarifmodell.oninput = function() {
+  setUpBearbeitungsgebühr();
+  setUp();
+};
+
+/* Kaufpreis konfiguration */
+/* ----------------------- */
+var kaufpreis = document.getElementById("kp");
+kaufpreis.oninput = function() {
+  input(kaufpreis);
+  setUp();
+};
 // Handling bei ungültiger Eingabe
 function falsch(output) {
-  if (output.value != parseFloat(output.value)) {
-    var get = document.getElementsByClassName("output");
-    var clear = [];
+  if (deformat(output.value) != parseFloat(deformat(output.value))) {
+    let get = document.getElementsByClassName("output");
+    let clear = [];
     for (var i = get.length; i--; clear.unshift(get[i]));
     clear.splice(0, 5);
-    for (i = 0; i < clear.length; i++) {
+    for (let i = 0; i < clear.length; i++) {
       clear[i].value = "";
     }
   }
-  bearbeitungsgebühr();
+  setUpBearbeitungsgebühr();
 }
-
-// überprüft, ob die inputs vom kp disabled wurden
+// überprüft, ob die inputs vom kaufpreis disabled wurden
 var lock = true;
-function kaufpreis() {
+function setUpKaufpreis() {
   /* INPUT KONFIGURATION */
 
   // zu deaktivierende Elemente
-  var input = new Array(eli, elr, rwi, rwr);
+  var input = new Array(
+    eigenleistungInput,
+    eigenleistungRange,
+    restwertInput,
+    restwertRange
+  );
   // zu löschende inhalte
-  // Inputs aktivieren wenn kp != leer
-  if (deformat(kp.value) > 0) {
+  // Inputs aktivieren wenn kaufpreis != leer
+  if (deformat(kaufpreis.value) > 0) {
     lock = false;
-    for (i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) {
       input[i].disabled = false;
     }
   }
-  // Inputs deaktivieren wenn kp == leer od. 0
+  // Inputs deaktivieren wenn kaufpreis == leer od. 0
   else {
     lock = true;
-    for (i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) {
       input[i].disabled = true;
     }
   }
 }
 /*  mit n auf focus überprüfen 
-    sonst würde bei keiner änderung des kp.values, 
+    sonst würde bei keiner änderung des kaufpreis.values, 
     der Dezimalpunkt entfernt werden                  */
 var n = 0;
-kp.onblur = function() {
-  kp.value = format(kp.value.replace(",", ".") * 1.0);
+kaufpreis.onblur = function() {
+  kaufpreis.value = format(kaufpreis.value.replace(",", ".") * 1.0);
   n = 0;
 };
 /*  Bei focus -> Deformat()    
     Da es sonst beim Format() zum Fehler kommt:   */
-kp.onfocus = function() {
-  kp.value = kp.value || 0;
-  if (n == 0) kp.value = deformat(kp.value);
+kaufpreis.onfocus = function() {
+  kaufpreis.value = kaufpreis.value || 0;
+  if (n == 0) kaufpreis.value = deformat(kaufpreis.value);
   n++;
-  kp.select();
+  kaufpreis.select();
 };
 
 /* Laufzeit konfiguration */
 /* ---------------------- */
-lzr.oninput = function() {
-  call();
+var laufzeitInput = document.getElementById("lzi");
+var laufzeitRange = document.getElementById("lzr");
+var laufzeitOutput = document.getElementById("lzo");
+laufzeitRange.oninput = function() {
+  setUp();
 };
-lzi.oninput = function() {
-  call();
-  falsch(lzo);
+laufzeitInput.oninput = function() {
+  setUp();
+  falsch(laufzeitOutput);
 };
-function laufzeit() {
-  if (lzi.value > 0) {
-    lzr.disabled = true;
-    if (lzi.value > 23) {
-      if (lzi.value < 73) lzo.value = Math.round(lzi.value);
-      else lzo.value = "zu lange";
-    } else lzo.value = "zu kurz";
+function setUpLaufzeit() {
+  if (laufzeitInput.value > 0) {
+    laufzeitRange.disabled = true;
+    if (laufzeitInput.value > 23) {
+      if (laufzeitInput.value < 73)
+        laufzeitOutput.value = Math.round(laufzeitInput.value);
+      else laufzeitOutput.value = "zu lange";
+    } else laufzeitOutput.value = "zu kurz";
   } else {
-    lzr.disabled = false;
-    lzo.value = lzr.value;
+    laufzeitRange.disabled = false;
+    laufzeitOutput.value = laufzeitRange.value;
   }
 }
 
 /* Eigenleistung konfigurieren */
 /* --------------------------- */
-elr.oninput = function() {
-  call();
+var eigenleistungInput = document.getElementById("eli");
+var eigenleistungRange = document.getElementById("elr");
+var eigenleistungOutput = document.getElementById("elo");
+var eigenleistungPercent = document.getElementById("elp");
+
+eigenleistungRange.oninput = function() {
+  setUp();
 };
-eli.oninput = function() {
-  call();
-  falsch(elo);
+eigenleistungInput.oninput = function() {
+  setUp();
+  falsch(eigenleistungOutput);
 };
-function eigenleistung() {
-  if (eli.value > 0) {
-    elr.disabled = true;
-    if (eli.value / deformat(kp.value) > 0.4666666666) elo.value = "zu viel";
-    else elo.value = format(eli.value * 1);
+function setUpEigenleistung() {
+  if (eigenleistungInput.value > 0) {
+    eigenleistungRange.disabled = true;
+    if (eigenleistungInput.value / deformat(kaufpreis.value) > 0.4666666666)
+      eigenleistungOutput.value = "zu viel";
+    else eigenleistungOutput.value = format(eigenleistungInput.value * 1.0);
   } else {
-    elo.value = format((elr.value * deformat(kp.value)) / 1000.0);
-    if (lock == false) elr.disabled = false;
+    eigenleistungOutput.value = format(
+      (eigenleistungRange.value * deformat(kaufpreis.value)) / 1000.0
+    );
+    if (lock == false) eigenleistungRange.disabled = false;
   }
-  isNaN(deformat(elo.value))
-    ? (elp.value = "-")
-    : (elp.value = pFormat(deformat(elo.value) / deformat(kp.value)));
+  isNaN(deformat(eigenleistungOutput.value))
+    ? (eigenleistungPercent.value = "-")
+    : (eigenleistungPercent.value = pFormat(
+        deformat(eigenleistungOutput.value) / deformat(kaufpreis.value)
+      ));
 }
 
 /* Restwert konfigurieren */
 /* ---------------------- */
-rwr.oninput = function() {
-  call();
+var restwertInput = document.getElementById("rwi");
+var restwertRange = document.getElementById("rwr");
+var restwertOutput = document.getElementById("rwo");
+var restwertPercent = document.getElementById("rwp");
+
+restwertRange.oninput = function() {
+  setUp();
 };
-rwi.oninput = function() {
-  call();
-  falsch(rwo);
+restwertInput.oninput = function() {
+  setUp();
+  falsch(restwertOutput);
 };
-function restwert() {
-  if (rwi.value > 0) {
-    rwr.disabled = true;
-    if (rwi.value / deformat(kp.value) < 0.1) rwo.value = "zu wenig";
-    else if (rwi.value / deformat(kp.value) > 0.5) rwo.value = "zu viel";
-    else rwo.value = format(rwi.value);
+function setUpRestwert() {
+  if (restwertInput.value > 0) {
+    restwertRange.disabled = true;
+    if (restwertInput.value / deformat(kaufpreis.value) < 0.1)
+      restwertOutput.value = "zu wenig";
+    else if (restwertInput.value / deformat(kaufpreis.value) > 0.5)
+      restwertOutput.value = "zu viel";
+    else restwertOutput.value = format(restwertInput.value * 1.0);
   } else {
-    if (lock == false) rwr.disabled = false;
-    rwo.value = format((deformat(kp.value) * rwr.value) / 1000.0);
+    if (lock == false) restwertRange.disabled = false;
+    restwertOutput.value = format(
+      (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
+    );
   }
-  isNaN(deformat(rwo.value))
-    ? (rwp.value = "-")
-    : (rwp.value = pFormat(deformat(rwo.value) / deformat(kp.value)));
+  isNaN(deformat(restwertOutput.value))
+    ? (restwertPercent.value = "-")
+    : (restwertPercent.value = pFormat(
+        deformat(restwertOutput.value) / deformat(kaufpreis.value)
+      ));
 }
 
 /* Entgelt konfigurieren */
 /* --------------------- */
-var egVal; // gegen Rundungsfehler
-function entgelt() {
-  var zins = (0.0225 + (1 - vg.value) * 0.0025) / 12.0,
-    zzr = deformat(lzo.value);
-  bw = (deformat(kp.value) - deformat(elo.value)) * (1 + tm.value / 100.0);
-  zw = -deformat(rwo.value);
-  egVal = -rmz(zins, zzr, bw, zw, 0);
-  eg.value = format(egVal);
+var entgelt = document.getElementById("eg");
+var entgeltValue; // gegen Rundungsfehler
+function setUpEntgelt() {
+  var zins = (0.0225 + (1 - vertragsmodell.value) * 0.0025) / 12.0,
+    zzr = deformat(laufzeitOutput.value);
+  let bw =
+    (deformat(kaufpreis.value) - deformat(eigenleistungOutput.value)) *
+    (1 + tarifmodell.value / 100.0);
+  let zw = -deformat(restwertOutput.value);
+  entgeltValue = -rmz(zins, zzr, bw, zw, 0);
+  entgelt.value = format(entgeltValue);
 }
 
+// Excel function
 function rmz(zins, zzr, bw, zw, f) {
   if (!zw) zw = 0;
   if (!f) f = 0;
@@ -237,32 +274,37 @@ function rmz(zins, zzr, bw, zw, f) {
 
 /* Rechtsgeschäftsgebühr konfigurieren */
 /* ----------------------------------- */
-function rechtsgeschäftsgebühr() {
-  rg.value = format(
-    Math.round((deformat(eg.value) * 36 + deformat(elo.value)) * 0.01) *
-      vg.value
+var rechtsgeschäftsgebühr = document.getElementById("rg");
+var setUpRechtsgeschäftsgebühr = function setUpRechtsgeschäftsgebühr() {
+  rechtsgeschäftsgebühr.value = format(
+    Math.round(
+      (deformat(entgelt.value) * 36 + deformat(eigenleistungOutput.value)) *
+        0.01
+    ) * vertragsmodell.value
   );
-}
+};
 /* Bearbeitungsgebühr konfigurieren */
 /* -------------------------------- */
-function bearbeitungsgebühr() {
-  bg.value = format(tm.value * 50);
+var bearbeitungsgebühr = document.getElementById("bg");
+function setUpBearbeitungsgebühr() {
+  bearbeitungsgebühr.value = format(tarifmodell.value * 50);
 }
 
 /* Effektivzinssatz konfigurieren */
 /* ------------------------------ */
-function effektivzinssatz() {
-  ez.value = pFormat(
+var effektivzinssatz = document.getElementById("ez");
+function setUpEffektivzinssatz() {
+  effektivzinssatz.value = pFormat(
     Math.pow(
       1 +
         zins(
-          deformat(lzo.value),
-          -egVal,
-          deformat(kp.value) -
-            deformat(elo.value) -
-            deformat(bg.value) -
-            deformat(rg.value),
-          -deformat(rwo.value),
+          deformat(laufzeitOutput.value),
+          -entgeltValue,
+          deformat(kaufpreis.value) -
+            deformat(eigenleistungOutput.value) -
+            deformat(bearbeitungsgebühr.value) -
+            deformat(rechtsgeschäftsgebühr.value),
+          -deformat(restwertOutput.value),
           1
         ),
       12
@@ -282,7 +324,7 @@ function zins(zins, rmz, bw, zw, f, sw) {
   var toleranz = Math.abs(0.0000000005 * rmz);
 
   // Tries at most 40 times to find a solution within the tolerance.
-  for (var i = 0; i < 40; i++) {
+  for (let i = 0; i < 40; i++) {
     // Resets the balance to the original pv.
     var balance = bw;
 
@@ -322,23 +364,30 @@ function zins(zins, rmz, bw, zw, f, sw) {
 
 /* Gesamtbelastung konfigurieren */
 /* ----------------------------- */
-function gesamtbelastung() {
-  gb.value = format(
-    egVal * deformat(lzo.value) +
-      deformat(elo.value) +
-      deformat(rwo.value) +
-      deformat(rg.value) +
-      deformat(bg.value)
+var gesamtbelastung = document.getElementById("gb");
+function setUpGesamtbelastung() {
+  gesamtbelastung.value = format(
+    entgeltValue * deformat(laufzeitOutput.value) +
+      deformat(eigenleistungOutput.value) +
+      deformat(restwertOutput.value) +
+      deformat(rechtsgeschäftsgebühr.value) +
+      deformat(bearbeitungsgebühr.value)
   );
 }
 
 /* Gesamtzinsen konfigurieren */
 /* -------------------------- */
-function gesamtzinsen() {
-  gz.value = format(deformat(gb.value) - deformat(kp.value));
+var gesamtzinsen = document.getElementById("gz");
+function setUpGesamtzinsen() {
+  gesamtzinsen.value = format(
+    deformat(gesamtbelastung.value) - deformat(kaufpreis.value)
+  );
 }
 /* Finanzierungsbeitrag konfigurieren */
 /* ---------------------------------- */
-function finanzierungsbeitrag() {
-  fb.value = format(deformat(kp.value) - deformat(elo.value));
+var finanzierungsbeitrag = document.getElementById("fb");
+function setUpFinanzierungsbeitrag() {
+  finanzierungsbeitrag.value = format(
+    deformat(kaufpreis.value) - deformat(eigenleistungOutput.value)
+  );
 }
