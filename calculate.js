@@ -2,20 +2,26 @@
 /* -------------- */
 function format(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR"
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "currency",
+        currency: "EUR"
+      }
+    );
   } else return "0,00 €";
 }
 // Prozent-Formatierung
 function pFormat(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "percent",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    );
   } else return "0,00 %";
 }
 // Deformatierung (fürs rechnen)
@@ -27,6 +33,29 @@ function deformat(number) {
   number = number.trim();
   number = number.replace(",", ".");
   return parseFloat(number);
+}
+/*  Bei focus -> Deformat()    
+    Da es sonst beim Format() zum Fehler kommt:   */
+function gotFocus(input) {
+  input.value = input.value || 0;
+  if (n == 0) input.value = deformat(input.value);
+  n++;
+
+  input.value = input.value.replace(".", ",");
+  input.select();
+}
+/*  mit n auf focus überprüfen 
+    sonst würde bei keiner änderung des input.values, 
+    der Dezimalpunkt entfernt werden                  */
+var n;
+function lostFocus(input) {
+  input.value = format(input.value.replace(",", ".") * 1.0);
+  n = 0;
+  setUp();
+}
+function configRange(range, input, rangeUse = false) {
+  if (rangeUse) input.value = format(range.value);
+  else range.value = input.value;
 }
 /* Input konfigurieren */
 /* ------------------- */
@@ -55,9 +84,9 @@ function input(input) {
 /* ------------------ */
 function setUp() {
   setUpKaufpreis();
-  setUpLaufzeit();
-  setUpEigenleistung();
-  setUpRestwert();
+  // setUpLaufzeit();
+  // setUpEigenleistung();
+  // setUpRestwert();
   setUpEntgelt();
   setUpRechtsgeschäftsgebühr();
   setUpEffektivzinssatz();
@@ -80,14 +109,6 @@ tarifmodell.oninput = function() {
   setUpBearbeitungsgebühr();
   setUp();
 };
-
-/* Kaufpreis konfiguration */
-/* ----------------------- */
-var kaufpreis = document.getElementById("kp");
-kaufpreis.oninput = function() {
-  input(kaufpreis);
-  setUp();
-};
 // Handling bei ungültiger Eingabe
 function falsch(output) {
   if (deformat(output.value) != parseFloat(deformat(output.value))) {
@@ -101,8 +122,16 @@ function falsch(output) {
   }
   setUpBearbeitungsgebühr();
 }
+
+/* Kaufpreis konfiguration */
+/* ----------------------- */
+var kaufpreis = document.getElementById("kp");
+kaufpreis.oninput = function() {
+  input(kaufpreis);
+  setUp();
+};
 // überprüft, ob die inputs vom kaufpreis disabled wurden
-var lock = true;
+var lock;
 function setUpKaufpreis() {
   /* INPUT KONFIGURATION */
 
@@ -113,106 +142,91 @@ function setUpKaufpreis() {
     restwertInput,
     restwertRange
   );
-  // zu löschende inhalte
   // Inputs aktivieren wenn kaufpreis != leer
-  if (deformat(kaufpreis.value) > 0) {
+  if (deformat(kaufpreis.value)) {
     lock = false;
-    for (let i = 0; i < input.length; i++) {
-      input[i].disabled = false;
-    }
+    for (let i in input) input[i].disabled = false;
   }
-  // Inputs deaktivieren wenn kaufpreis == leer od. 0
+  // Inputs deaktivieren wenn kaufpreis ungültig oder 0
   else {
     lock = true;
-    for (let i = 0; i < input.length; i++) {
+    for (let i in input) {
       input[i].disabled = true;
+      input[i].value = null;
     }
   }
 }
-/*  mit n auf focus überprüfen 
-    sonst würde bei keiner änderung des kaufpreis.values, 
-    der Dezimalpunkt entfernt werden                  */
-var n = 0;
-kaufpreis.onblur = function() {
-  kaufpreis.value = format(kaufpreis.value.replace(",", ".") * 1.0);
-  n = 0;
-};
-/*  Bei focus -> Deformat()    
-    Da es sonst beim Format() zum Fehler kommt:   */
-kaufpreis.onfocus = function() {
-  kaufpreis.value = kaufpreis.value || 0;
-  if (n == 0) kaufpreis.value = deformat(kaufpreis.value);
-  n++;
 
-  kaufpreis.value = kaufpreis.value.replace(".", ",");
-  kaufpreis.select();
-};
+kaufpreis.onblur = () => lostFocus(kaufpreis);
+kaufpreis.onfocus = () => gotFocus(kaufpreis);
 
 /* Laufzeit konfiguration */
 /* ---------------------- */
 var laufzeitInput = document.getElementById("lzi");
 var laufzeitRange = document.getElementById("lzr");
-var laufzeitOutput = document.getElementById("lzo");
-laufzeitRange.oninput = function() {
-  setUp();
-};
+
 laufzeitInput.oninput = function() {
+  input(laufzeitInput);
+  configRange(laufzeitRange, laufzeitInput);
   setUp();
-  falsch(laufzeitOutput);
+  falsch(laufzeitInput);
 };
-function setUpLaufzeit() {
-  if (laufzeit.value > 0) {
-    laufzeitRange.disabled = true;
-    if (laufzeitInput.value > 23) {
-      if (laufzeitInput.value < 73)
-        laufzeitOutput.value = Math.round(laufzeitInput.value);
-      else laufzeitOutput.value = "zu lange";
-    } else laufzeitOutput.value = "zu kurz";
-  } else {
-    laufzeitRange.disabled = false;
-    laufzeitOutput.value = laufzeitRange.value;
+laufzeitRange.oninput = function() {
+  configRange(laufzeitRange, laufzeitInput, true);
+  setUp();
+};
+
+laufzeitInput.onchange = function() {
+  // aufrunden
+  if (laufzeitInput.value.includes(",")) {
+    let temp = laufzeitInput.value.replace(",", ".");
+    temp = Math.round(parseFloat(temp));
+    laufzeitInput.value = temp;
   }
-}
+
+  if (laufzeitInput.value < 24) laufzeitInput.value = 24;
+  if (laufzeitInput.value > 72) laufzeitInput.value = 72;
+};
 
 /* Eigenleistung konfigurieren */
 /* --------------------------- */
 var eigenleistungInput = document.getElementById("eli");
 var eigenleistungRange = document.getElementById("elr");
-var eigenleistungOutput = document.getElementById("elo");
 var eigenleistungPercent = document.getElementById("elp");
 
 eigenleistungRange.oninput = function() {
-  setUp();
+  configRange(eigenleistungRange, eigenleistungInput, true);
+  eigenleistungInput.value = format(
+    (eigenleistungRange.value * deformat(kaufpreis.value)) / 1000
+  );
+  eigenleistungPercent.value = pFormat(
+    deformat(eigenleistungInput.value) / deformat(kaufpreis.value)
+  );
 };
 eigenleistungInput.oninput = function() {
+  configRange(eigenleistungRange, eigenleistungInput);
   input(eigenleistungInput);
-  setUp();
-  falsch(eigenleistungOutput);
+  falsch(eigenleistungInput);
 };
 function setUpEigenleistung() {
-  if (eigenleistungInput.value > 0) {
-    eigenleistungRange.disabled = true;
-    if (eigenleistungInput.value / deformat(kaufpreis.value) > 0.4666666666)
-      eigenleistungOutput.value = "zu viel";
-    else eigenleistungOutput.value = format(eigenleistungInput.value * 1.0);
-  } else {
-    eigenleistungOutput.value = format(
-      (eigenleistungRange.value * deformat(kaufpreis.value)) / 1000.0
-    );
-    if (lock == false) eigenleistungRange.disabled = false;
-  }
-  isNaN(deformat(eigenleistungOutput.value))
-    ? (eigenleistungPercent.value = "-")
-    : (eigenleistungPercent.value = pFormat(
-        deformat(eigenleistungOutput.value) / deformat(kaufpreis.value)
-      ));
-}
+  if (eigenleistungInput.value / deformat(kaufpreis.value) > 0.4666666666) {
+    eigenleistungInput.value = format(deformat(kaufpreis.value) * 0.466); // user benachrichtigen
+  } else eigenleistungInput.value = format(eigenleistungInput.value * 1.0);
 
+  eigenleistungPercent.value = pFormat(
+    deformat(eigenleistungInput.value) / deformat(kaufpreis.value)
+  );
+  eigenleistungRange =
+    (deformat(eigenleistungInput.value) / deformat(kaufpreis.value)) * 100;
+}
+eigenleistungInput.onfocus = () => gotFocus(eigenleistungInput);
+// eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
+eigenleistungInput.onchange = () => setUpEigenleistung();
+eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
 /* Restwert konfigurieren */
 /* ---------------------- */
 var restwertInput = document.getElementById("rwi");
 var restwertRange = document.getElementById("rwr");
-var restwertOutput = document.getElementById("rwo");
 var restwertPercent = document.getElementById("rwp");
 
 restwertRange.oninput = function() {
@@ -220,40 +234,40 @@ restwertRange.oninput = function() {
 };
 restwertInput.oninput = function() {
   setUp();
-  falsch(restwertOutput);
+  falsch(restwertInput);
 };
-function setUpRestwert() {
-  if (restwertInput.value > 0) {
-    restwertRange.disabled = true;
-    if (restwertInput.value / deformat(kaufpreis.value) < 0.1)
-      restwertOutput.value = "zu wenig";
-    else if (restwertInput.value / deformat(kaufpreis.value) > 0.5)
-      restwertOutput.value = "zu viel";
-    else restwertOutput.value = format(restwertInput.value * 1.0);
-  } else {
-    if (lock == false) restwertRange.disabled = false;
-    restwertOutput.value = format(
-      (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
-    );
-  }
-  isNaN(deformat(restwertOutput.value))
-    ? (restwertPercent.value = "-")
-    : (restwertPercent.value = pFormat(
-        deformat(restwertOutput.value) / deformat(kaufpreis.value)
-      ));
-}
+// function setUpRestwert() {
+//   if (restwertInput.value > 0) {
+//     restwertRange.disabled = true;
+//     if (restwertInput.value / deformat(kaufpreis.value) < 0.1)
+//       restwertInput.value = "zu wenig";
+//     else if (restwertInput.value / deformat(kaufpreis.value) > 0.5)
+//       restwertInput.value = "zu viel";
+//     else restwertInput.value = format(restwertInput.value * 1.0);
+//   } else {
+//     if (lock == false) restwertRange.disabled = false;
+//     restwertInput.value = format(
+//       (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
+//     );
+//   }
+//   isNaN(deformat(restwertInput.value))
+//     ? (restwertPercent.value = "-")
+//     : (restwertPercent.value = pFormat(
+//       deformat(restwertInput.value) / deformat(kaufpreis.value)
+//     ));
+// }
 
 /* Entgelt konfigurieren */
 /* --------------------- */
 var entgelt = document.getElementById("eg");
 var entgeltValue; // gegen Rundungsfehler
 function setUpEntgelt() {
-  var zins = (0.0225 + (1 - vertragsmodell.value) * 0.0025) / 12.0,
-    zzr = deformat(laufzeitOutput.value);
+  let zins = (0.0225 + (1 - vertragsmodell.value) * 0.0025) / 12.0,
+    zzr = deformat(laufzeitInput.value);
   let bw =
-    (deformat(kaufpreis.value) - deformat(eigenleistungOutput.value)) *
+    (deformat(kaufpreis.value) - deformat(eigenleistungInput.value)) *
     (1 + tarifmodell.value / 100.0);
-  let zw = -deformat(restwertOutput.value);
+  let zw = -deformat(restwertInput.value);
   entgeltValue = -rmz(zins, zzr, bw, zw, 0);
   entgelt.value = format(entgeltValue);
 }
@@ -265,8 +279,8 @@ function rmz(zins, zzr, bw, zw, f) {
 
   if (zins == 0) return -(bw + zw) / zzr;
 
-  var tmp = Math.pow(1 + zins, zzr);
-  var rmz = (zins / (tmp - 1)) * -(bw * tmp + zw);
+  let tmp = Math.pow(1 + zins, zzr);
+  let rmz = (zins / (tmp - 1)) * -(bw * tmp + zw);
 
   if (f == 1) {
     rmz /= 1 + zins;
@@ -281,11 +295,11 @@ var rechtsgeschäftsgebühr = document.getElementById("rg");
 var setUpRechtsgeschäftsgebühr = function setUpRechtsgeschäftsgebühr() {
   rechtsgeschäftsgebühr.value = format(
     Math.round(
-      (deformat(entgelt.value) * 36 + deformat(eigenleistungOutput.value)) *
-        0.01
+      (deformat(entgelt.value) * 36 + deformat(eigenleistungInput.value)) * 0.01
     ) * vertragsmodell.value
   );
 };
+
 /* Bearbeitungsgebühr konfigurieren */
 /* -------------------------------- */
 var bearbeitungsgebühr = document.getElementById("bg");
@@ -301,13 +315,13 @@ function setUpEffektivzinssatz() {
     Math.pow(
       1 +
         zins(
-          deformat(laufzeitOutput.value),
+          deformat(laufzeitInput.value),
           -entgeltValue,
           deformat(kaufpreis.value) -
-            deformat(eigenleistungOutput.value) -
+            deformat(eigenleistungInput.value) -
             deformat(bearbeitungsgebühr.value) -
             deformat(rechtsgeschäftsgebühr.value),
-          -deformat(restwertOutput.value),
+          -deformat(restwertInput.value),
           1
         ),
       12
@@ -370,9 +384,9 @@ function zins(zins, rmz, bw, zw, f, sw) {
 var gesamtbelastung = document.getElementById("gb");
 function setUpGesamtbelastung() {
   gesamtbelastung.value = format(
-    entgeltValue * deformat(laufzeitOutput.value) +
-      deformat(eigenleistungOutput.value) +
-      deformat(restwertOutput.value) +
+    entgeltValue * deformat(laufzeitInput.value) +
+      deformat(eigenleistungInput.value) +
+      deformat(restwertInput.value) +
       deformat(rechtsgeschäftsgebühr.value) +
       deformat(bearbeitungsgebühr.value)
   );
@@ -386,11 +400,12 @@ function setUpGesamtzinsen() {
     deformat(gesamtbelastung.value) - deformat(kaufpreis.value)
   );
 }
+
 /* Finanzierungsbeitrag konfigurieren */
 /* ---------------------------------- */
 var finanzierungsbeitrag = document.getElementById("fb");
 function setUpFinanzierungsbeitrag() {
   finanzierungsbeitrag.value = format(
-    deformat(kaufpreis.value) - deformat(eigenleistungOutput.value)
+    deformat(kaufpreis.value) - deformat(eigenleistungInput.value)
   );
 }
