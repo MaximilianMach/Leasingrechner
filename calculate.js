@@ -2,20 +2,26 @@
 /* -------------- */
 function format(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR"
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "currency",
+        currency: "EUR"
+      }
+    );
   } else return "0,00 €";
 }
 // Prozent-Formatierung
 function pFormat(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "percent",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    );
   } else return "0,00 %";
 }
 // Deformatierung (fürs rechnen)
@@ -161,7 +167,7 @@ laufzeitInput.oninput = function() {
   falsch(laufzeitOutput);
 };
 function setUpLaufzeit() {
-  if (laufzeit.value > 0) {
+  if (laufzeitInput.value > 0) {
     laufzeitRange.disabled = true;
     if (laufzeitInput.value > 23) {
       if (laufzeitInput.value < 73)
@@ -204,8 +210,8 @@ function setUpEigenleistung() {
   isNaN(deformat(eigenleistungOutput.value))
     ? (eigenleistungPercent.value = "-")
     : (eigenleistungPercent.value = pFormat(
-        deformat(eigenleistungOutput.value) / deformat(kaufpreis.value)
-      ));
+      deformat(eigenleistungOutput.value) / deformat(kaufpreis.value)
+    ));
 }
 
 /* Restwert konfigurieren */
@@ -239,8 +245,8 @@ function setUpRestwert() {
   isNaN(deformat(restwertOutput.value))
     ? (restwertPercent.value = "-")
     : (restwertPercent.value = pFormat(
-        deformat(restwertOutput.value) / deformat(kaufpreis.value)
-      ));
+      deformat(restwertOutput.value) / deformat(kaufpreis.value)
+    ));
 }
 
 /* Entgelt konfigurieren */
@@ -286,6 +292,7 @@ var setUpRechtsgeschäftsgebühr = function setUpRechtsgeschäftsgebühr() {
     ) * vertragsmodell.value
   );
 };
+
 /* Bearbeitungsgebühr konfigurieren */
 /* -------------------------------- */
 var bearbeitungsgebühr = document.getElementById("bg");
@@ -386,6 +393,7 @@ function setUpGesamtzinsen() {
     deformat(gesamtbelastung.value) - deformat(kaufpreis.value)
   );
 }
+
 /* Finanzierungsbeitrag konfigurieren */
 /* ---------------------------------- */
 var finanzierungsbeitrag = document.getElementById("fb");
