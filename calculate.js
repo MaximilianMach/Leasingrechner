@@ -37,8 +37,9 @@ function deformat(number) {
 /*  Bei focus -> Deformat()    
     Da es sonst beim Format() zum Fehler kommt:   */
 function gotFocus(input) {
+  // Wenn noch kein Wert vorhanden -> wird zu 0
   input.value = input.value || 0;
-  if (n == 0) input.value = deformat(input.value);
+  input.value = deformat(input.value);
   n++;
 
   input.value = input.value.replace(".", ",");
@@ -51,14 +52,25 @@ var n;
 function lostFocus(input) {
   input.value = format(input.value.replace(",", ".") * 1.0);
   n = 0;
+  ungueltigeEingabe(input);
   setUp();
 }
-function configRange(range, input, rangeUse = false) {
-  if (rangeUse) input.value = format(range.value);
+function configRange(range, input, rangeInUse = false) {
+  if (rangeInUse) input.value = format(range.value);
   else range.value = input.value;
 }
+function configPercent(percent, input) {
+  isNaN(deformat(input.value))
+    ? (percent.value = "-")
+    : (percent.value = pFormat(
+        deformat(input.value) / deformat(kaufpreis.value)
+      ));
+}
+
 /* Input konfigurieren */
 /* ------------------- */
+
+// überprüft inputs auf nummer, macht ein komma aus punkt & erlaubt nur ein komma
 function input(input) {
   // Dezimalpunkt in Komma umwandeln (aufgrund von Deformat())
   if (input.value.includes(".")) input.value = input.value.replace(".", ",");
@@ -78,6 +90,17 @@ function input(input) {
     let show = input.value.substring(0, n);
     input.value = show;
   }
+}
+// Handling bei ungültiger Eingabe
+function ungueltigeEingabe(output) {
+  if (deformat(output.value) != parseFloat(deformat(output.value))) {
+    let get = document.getElementsByClassName("output");
+    let clear = []; // enthält die zu behandelnde elemente
+    for (var i = get.length; i--; clear.unshift(get[i])); // erstellt aus dem get node ein array
+    clear.splice(0, 2); // Percent outputs ignorieren
+    for (let temp of clear) temp.value = ""; // löscht den inhalt der outputs
+  }
+  setUpBearbeitungsgebühr(); // kann trotzdem angezeigt werden, da nur von Tarifmodell abhängig
 }
 
 /* Funktionen abrufen */
@@ -109,19 +132,6 @@ tarifmodell.oninput = function() {
   setUpBearbeitungsgebühr();
   setUp();
 };
-// Handling bei ungültiger Eingabe
-function falsch(output) {
-  if (deformat(output.value) != parseFloat(deformat(output.value))) {
-    let get = document.getElementsByClassName("output");
-    let clear = [];
-    for (var i = get.length; i--; clear.unshift(get[i]));
-    clear.splice(0, 5);
-    for (let i = 0; i < clear.length; i++) {
-      clear[i].value = "";
-    }
-  }
-  setUpBearbeitungsgebühr();
-}
 
 /* Kaufpreis konfiguration */
 /* ----------------------- */
@@ -169,7 +179,7 @@ laufzeitInput.oninput = function() {
   input(laufzeitInput);
   configRange(laufzeitRange, laufzeitInput);
   setUp();
-  falsch(laufzeitInput);
+  ungueltigeEingabe(laufzeitInput);
 };
 laufzeitRange.oninput = function() {
   configRange(laufzeitRange, laufzeitInput, true);
@@ -206,36 +216,55 @@ eigenleistungRange.oninput = function() {
 eigenleistungInput.oninput = function() {
   configRange(eigenleistungRange, eigenleistungInput);
   input(eigenleistungInput);
-  falsch(eigenleistungInput);
+  ungueltigeEingabe(eigenleistungInput);
 };
 function setUpEigenleistung() {
-  if (eigenleistungInput.value / deformat(kaufpreis.value) > 0.4666666666) {
+  if (
+    deformat(eigenleistungInput.value) / deformat(kaufpreis.value) >
+    0.4666666666
+  ) {
     eigenleistungInput.value = format(deformat(kaufpreis.value) * 0.466); // user benachrichtigen
-  } else eigenleistungInput.value = format(eigenleistungInput.value * 1.0);
-
-  eigenleistungPercent.value = pFormat(
-    deformat(eigenleistungInput.value) / deformat(kaufpreis.value)
-  );
+  } else
+    eigenleistungInput.value = format(deformat(eigenleistungInput.value) * 1.0);
+  configPercent(eigenleistungPercent, eigenleistungInput);
   eigenleistungRange =
     (deformat(eigenleistungInput.value) / deformat(kaufpreis.value)) * 100;
 }
 eigenleistungInput.onfocus = () => gotFocus(eigenleistungInput);
 // eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
 eigenleistungInput.onchange = () => setUpEigenleistung();
-eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
+
 /* Restwert konfigurieren */
 /* ---------------------- */
 var restwertInput = document.getElementById("rwi");
 var restwertRange = document.getElementById("rwr");
 var restwertPercent = document.getElementById("rwp");
 
-restwertRange.oninput = function() {
-  setUp();
-};
 restwertInput.oninput = function() {
-  setUp();
-  falsch(restwertInput);
+  //   setUp();
+  ungueltigeEingabe(restwertInput);
+  restwertRange.value =
+    (deformat(restwertInput.value) * 1000.0) / deformat(kaufpreis.value);
+  configPercent(restwertPercent, restwertInput);
 };
+restwertRange.oninput = function() {
+  //   setUp();
+  restwertInput.value = format(
+    (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
+  );
+  configPercent(restwertPercent, restwertInput);
+};
+
+restwertInput.onchange = function() {
+  // user benachrichtigen
+  // zu wenig
+  if (deformat(restwertInput.value) / deformat(kaufpreis.value) < 0.1)
+    restwertInput.value = deformat(kaufpreis.value) * 0.1;
+  // zu viel
+  if (deformat(restwertInput.value) / deformat(kaufpreis.value) > 0.5)
+    restwertInput.value = deformat(kaufpreis.value) * 0.5;
+};
+
 // function setUpRestwert() {
 //   if (restwertInput.value > 0) {
 //     restwertRange.disabled = true;
@@ -250,12 +279,11 @@ restwertInput.oninput = function() {
 //       (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
 //     );
 //   }
-//   isNaN(deformat(restwertInput.value))
-//     ? (restwertPercent.value = "-")
-//     : (restwertPercent.value = pFormat(
-//       deformat(restwertInput.value) / deformat(kaufpreis.value)
-//     ));
+
 // }
+
+restwertInput.onfocus = () => gotFocus(restwertInput);
+restwertInput.onblur = () => lostFocus(restwertInput);
 
 /* Entgelt konfigurieren */
 /* --------------------- */
