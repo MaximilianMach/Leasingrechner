@@ -2,26 +2,20 @@
 /* -------------- */
 function format(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString(
-      "de-DE",
-      {
-        style: "currency",
-        currency: "EUR"
-      }
-    );
+    return number.toLocaleString("de-DE", {
+      style: "currency",
+      currency: "EUR"
+    });
   } else return "0,00 €";
 }
 // Prozent-Formatierung
 function pFormat(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString(
-      "de-DE",
-      {
-        style: "percent",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }
-    );
+    return number.toLocaleString("de-DE", {
+      style: "percent",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   } else return "0,00 %";
 }
 // Deformatierung (fürs rechnen)
@@ -54,10 +48,6 @@ function lostFocus(input) {
   n = 0;
   ungueltigeEingabe(input);
   setUp();
-}
-function configRange(range, input, rangeInUse = false) {
-  if (rangeInUse) input.value = format(range.value);
-  else range.value = input.value;
 }
 function configPercent(percent, input) {
   isNaN(deformat(input.value))
@@ -175,16 +165,22 @@ kaufpreis.onfocus = () => gotFocus(kaufpreis);
 var laufzeitInput = document.getElementById("lzi");
 var laufzeitRange = document.getElementById("lzr");
 
+function laufzeitRange(range, input, rangeInUse = false) {}
 laufzeitInput.oninput = function() {
   input(laufzeitInput);
-  configRange(laufzeitRange, laufzeitInput);
+  laufzeitRange();
   setUp();
   ungueltigeEingabe(laufzeitInput);
 };
 laufzeitRange.oninput = function() {
-  configRange(laufzeitRange, laufzeitInput, true);
+  laufzeitRange();
   setUp();
 };
+
+function syncLaufzeit(callingFromRAnge) {
+  if (rangeInUse) input.value = format(range.value);
+  else range.value = input.value;
+}
 
 laufzeitInput.onchange = function() {
   // aufrunden
@@ -204,35 +200,43 @@ var eigenleistungInput = document.getElementById("eli");
 var eigenleistungRange = document.getElementById("elr");
 var eigenleistungPercent = document.getElementById("elp");
 
-eigenleistungRange.oninput = function() {
-  configRange(eigenleistungRange, eigenleistungInput, true);
-  eigenleistungInput.value = format(
-    (eigenleistungRange.value * deformat(kaufpreis.value)) / 1000
-  );
-  eigenleistungPercent.value = pFormat(
-    deformat(eigenleistungInput.value) / deformat(kaufpreis.value)
-  );
-};
 eigenleistungInput.oninput = function() {
-  configRange(eigenleistungRange, eigenleistungInput);
   input(eigenleistungInput);
   ungueltigeEingabe(eigenleistungInput);
+  syncEigenleistung(false);
 };
-function setUpEigenleistung() {
+eigenleistungRange.oninput = function() {
+  syncEigenleistung(true);
+};
+eigenleistungInput.onchange = function() {
   if (
     deformat(eigenleistungInput.value) / deformat(kaufpreis.value) >
     0.4666666666
-  ) {
-    eigenleistungInput.value = format(deformat(kaufpreis.value) * 0.466); // user benachrichtigen
-  } else
+  )
+    eigenleistungInput.value = format(deformat(kaufpreis.value) * 0.466);
+  // user benachrichtigen
+  else
     eigenleistungInput.value = format(deformat(eigenleistungInput.value) * 1.0);
+
+  // configPercent(eigenleistungPercent, eigenleistungInput);
+  syncEigenleistung(false);
+};
+
+function syncEigenleistung(callingFromRange) {
+  if (callingFromRange) {
+    eigenleistungInput.value = format(
+      (eigenleistungRange.value * deformat(kaufpreis.value)) / 1000
+    );
+  } else if (!callingFromRange) {
+    eigenleistungRange.value =
+      (deformat(eigenleistungInput.value) / deformat(kaufpreis.value)) * 1000;
+  }
+
   configPercent(eigenleistungPercent, eigenleistungInput);
-  eigenleistungRange =
-    (deformat(eigenleistungInput.value) / deformat(kaufpreis.value)) * 100;
 }
+
 eigenleistungInput.onfocus = () => gotFocus(eigenleistungInput);
-// eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
-eigenleistungInput.onchange = () => setUpEigenleistung();
+eigenleistungInput.onblur = () => lostFocus(eigenleistungInput);
 
 /* Restwert konfigurieren */
 /* ---------------------- */
@@ -241,18 +245,12 @@ var restwertRange = document.getElementById("rwr");
 var restwertPercent = document.getElementById("rwp");
 
 restwertInput.oninput = function() {
-  //   setUp();
+  input(restwertInput);
   ungueltigeEingabe(restwertInput);
-  restwertRange.value =
-    (deformat(restwertInput.value) * 1000.0) / deformat(kaufpreis.value);
-  configPercent(restwertPercent, restwertInput);
+  changeRestwert(false);
 };
 restwertRange.oninput = function() {
-  //   setUp();
-  restwertInput.value = format(
-    (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
-  );
-  configPercent(restwertPercent, restwertInput);
+  changeRestwert(true);
 };
 
 restwertInput.onchange = function() {
@@ -263,24 +261,20 @@ restwertInput.onchange = function() {
   // zu viel
   if (deformat(restwertInput.value) / deformat(kaufpreis.value) > 0.5)
     restwertInput.value = deformat(kaufpreis.value) * 0.5;
+  changeRestwert(false);
 };
 
-// function setUpRestwert() {
-//   if (restwertInput.value > 0) {
-//     restwertRange.disabled = true;
-//     if (restwertInput.value / deformat(kaufpreis.value) < 0.1)
-//       restwertInput.value = "zu wenig";
-//     else if (restwertInput.value / deformat(kaufpreis.value) > 0.5)
-//       restwertInput.value = "zu viel";
-//     else restwertInput.value = format(restwertInput.value * 1.0);
-//   } else {
-//     if (lock == false) restwertRange.disabled = false;
-//     restwertInput.value = format(
-//       (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
-//     );
-//   }
-
-// }
+function changeRestwert(callingFromRange) {
+  if (callingFromRange) {
+    restwertInput.value = format(
+      (deformat(kaufpreis.value) * restwertRange.value) / 1000.0
+    );
+  } else if (!callingFromRange) {
+    restwertRange.value =
+      (deformat(restwertInput.value) * 1000.0) / deformat(kaufpreis.value);
+  }
+  configPercent(restwertPercent, restwertInput);
+}
 
 restwertInput.onfocus = () => gotFocus(restwertInput);
 restwertInput.onblur = () => lostFocus(restwertInput);
