@@ -2,20 +2,26 @@
 /* -------------- */
 function format(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR"
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "currency",
+        currency: "EUR"
+      }
+    );
   } else return "0,00 €";
 }
 // Prozent-Formatierung
 function pFormat(number) {
   if (!isNaN(number)) {
-    return number.toLocaleString("de-DE", {
-      style: "percent",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return number.toLocaleString(
+      "de-DE",
+      {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    );
   } else return "0,00 %";
 }
 // Deformatierung (fürs rechnen)
@@ -34,18 +40,16 @@ function gotFocus(input) {
   // Wenn noch kein Wert vorhanden -> wird zu 0
   input.value = input.value || 0;
   input.value = deformat(input.value);
-  n++;
 
   input.value = input.value.replace(".", ",");
   input.select();
+  ungueltigeEingabe(input);
 }
 /*  mit n auf focus überprüfen 
     sonst würde bei keiner änderung des input.values, 
     der Dezimalpunkt entfernt werden                  */
-var n;
 function lostFocus(input) {
-  input.value = format(input.value.replace(",", ".") * 1.0);
-  n = 0;
+  input.value = format(deformat(input.value) * 1.0);
   ungueltigeEingabe(input);
   setUp();
 }
@@ -53,8 +57,8 @@ function configPercent(percent, input) {
   isNaN(deformat(input.value))
     ? (percent.value = "-")
     : (percent.value = pFormat(
-        deformat(input.value) / deformat(kaufpreis.value)
-      ));
+      deformat(input.value) / deformat(kaufpreis.value)
+    ));
 }
 
 /* Input konfigurieren */
@@ -82,8 +86,11 @@ function input(input) {
   }
 }
 // Handling bei ungültiger Eingabe
-function ungueltigeEingabe(output) {
-  if (deformat(output.value) != parseFloat(deformat(output.value))) {
+function ungueltigeEingabe(input) {
+  if (
+    !input.value ||
+    deformat(input.value) != parseFloat(deformat(input.value))
+  ) {
     let get = document.getElementsByClassName("output");
     let clear = []; // enthält die zu behandelnde elemente
     for (var i = get.length; i--; clear.unshift(get[i])); // erstellt aus dem get node ein array
@@ -96,10 +103,6 @@ function ungueltigeEingabe(output) {
 /* Funktionen abrufen */
 /* ------------------ */
 function setUp() {
-  setUpKaufpreis();
-  // setUpLaufzeit();
-  // setUpEigenleistung();
-  // setUpRestwert();
   setUpEntgelt();
   setUpRechtsgeschäftsgebühr();
   setUpEffektivzinssatz();
@@ -128,10 +131,9 @@ tarifmodell.oninput = function() {
 var kaufpreis = document.getElementById("kp");
 kaufpreis.oninput = function() {
   input(kaufpreis);
-  setUp();
+  setUpKaufpreis();
 };
 // überprüft, ob die inputs vom kaufpreis disabled wurden
-var lock;
 function setUpKaufpreis() {
   /* INPUT KONFIGURATION */
 
@@ -144,15 +146,13 @@ function setUpKaufpreis() {
   );
   // Inputs aktivieren wenn kaufpreis != leer
   if (deformat(kaufpreis.value)) {
-    lock = false;
-    for (let i in input) input[i].disabled = false;
+    for (let temp of input) temp.disabled = false;
   }
-  // Inputs deaktivieren wenn kaufpreis ungültig oder 0
+  // inputs deaktivieren wenn kaufpreis ungültig oder 0
   else {
-    lock = true;
-    for (let i in input) {
-      input[i].disabled = true;
-      input[i].value = null;
+    for (let temp of input) {
+      temp.disabled = true;
+      temp.value = null;
     }
   }
 }
@@ -165,21 +165,18 @@ kaufpreis.onfocus = () => gotFocus(kaufpreis);
 var laufzeitInput = document.getElementById("lzi");
 var laufzeitRange = document.getElementById("lzr");
 
-function laufzeitRange(range, input, rangeInUse = false) {}
 laufzeitInput.oninput = function() {
+  syncLaufzeit(false);
   input(laufzeitInput);
-  laufzeitRange();
-  setUp();
   ungueltigeEingabe(laufzeitInput);
 };
 laufzeitRange.oninput = function() {
-  laufzeitRange();
-  setUp();
+  syncLaufzeit(true);
 };
 
-function syncLaufzeit(callingFromRAnge) {
-  if (rangeInUse) input.value = format(range.value);
-  else range.value = input.value;
+function syncLaufzeit(callingFromRange) {
+  if (callingFromRange) laufzeitInput.value = format(laufzeitRange.value);
+  else laufzeitRange.value = laufzeitInput.value;
 }
 
 laufzeitInput.onchange = function() {
