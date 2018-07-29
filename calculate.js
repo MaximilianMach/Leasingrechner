@@ -43,7 +43,6 @@ function gotFocus(input) {
 
   input.value = input.value.replace(".", ",");
   input.select();
-  checkEingabe(input);
 }
 /*  mit n auf focus überprüfen 
     sonst würde bei keiner änderung des input.values, 
@@ -55,15 +54,11 @@ function lostFocus(input) {
 }
 function configPercent(percent, input, max, min) {
   percent.value = deformat(input.value) / deformat(kaufpreis.value);
-  if (isNaN(deformat(input.value))) percent.value = "-";
-  // else let temp = deformat(input.value) / deformat(kaufpreis.value);
-  if (max && max < percent.value) {
-    console.log("hello");
-    percent.value = "> " + max * 100 + " %";
-  }
-  if (min && min > percent.value) {
-    percent.value = "< " + min * 100 + " %";
-  } else percent.value = pFormat(percent.value * 1.0);
+  if (max && percent.value > max)
+    percent.value = "> " + (max * 100.0).toLocaleString("de-DE" , {minimumFractionDigits: 2}) + " %";
+  else if (min && min > percent.value)
+    percent.value = "< " + (min * 100.0).toLocaleString("de-DE", {minimumFractionDigits: 2}) +  " %";
+  else percent.value = pFormat(percent.value * 1.0);
 }
 
 /* Input konfigurieren */
@@ -92,15 +87,13 @@ function input(input) {
 }
 // Handling bei ungültiger Eingabe
 function checkEingabe(input) {
-  if (
-    !input.value ||
-    deformat(input.value) != parseFloat(deformat(input.value))
-  ) {
+  if (deformat(input.value)) {
     let get = document.getElementsByClassName("output");
     let clear = []; // enthält die zu behandelnde elemente
     for (var i = get.length; i--; clear.unshift(get[i])); // erstellt aus dem get node ein array
     clear.splice(0, 2); // Percent outputs ignorieren
     for (let temp of clear) temp.value = ""; // löscht den inhalt der outputs
+    // clear.map(temp.value = null);
   }
   setUpBearbeitungsgebühr(); // kann trotzdem angezeigt werden, da nur von Tarifmodell abhängig
 }
@@ -161,9 +154,9 @@ function setUpKaufpreis() {
   }
 }
 
+kaufpreis.onfocus = () => gotFocus(kaufpreis);
 kaufpreis.onchange = () => calculate();
 kaufpreis.onblur = () => lostFocus(kaufpreis);
-kaufpreis.onfocus = () => gotFocus(kaufpreis);
 
 /* Laufzeit konfiguration */
 /* ---------------------- */
