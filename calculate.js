@@ -26,6 +26,7 @@ function pFormat(number) {
 }
 // Deformatierung (fürs rechnen)
 function deformat(number) {
+  number = number.toString();
   while (number.includes(".")) {
     number = number.replace(".", "");
   }
@@ -49,8 +50,8 @@ function gotFocus(input) {
     der Dezimalpunkt entfernt werden                  */
 function lostFocus(input) {
   input.value = format(deformat(input.value) * 1.0);
-  checkEingabe(input);
   calculate();
+  configAusgabe(input);
 }
 function configPercent(percent, input, max, min) {
   percent.value = deformat(input.value) / deformat(kaufpreis.value);
@@ -65,7 +66,7 @@ function configPercent(percent, input, max, min) {
 /* ------------------- */
 
 // überprüft inputs auf nummer, macht ein komma aus punkt & erlaubt nur ein komma
-function input(input) {
+function configInput(input) {
   // Dezimalpunkt in Komma umwandeln (aufgrund von Deformat())
   if (input.value.includes(".")) input.value = input.value.replace(".", ",");
   // Buchstaben rausschmeißen
@@ -85,18 +86,18 @@ function input(input) {
     input.value = show;
   }
 }
-// Handling bei ungültiger Eingabe
-function checkEingabe(input) {
-  if (deformat(input.value)) {
+// aktiviert ausgabe erst, wenn alle eingabe felder beschrieben sind
+function configAusgabe() {
+  var eingabe = Array (kaufpreis, laufzeitInput, eigenleistungInput, restwertInput);
     let get = document.getElementsByClassName("output");
-    let clear = []; // enthält die zu behandelnde elemente
-    for (var i = get.length; i--; clear.unshift(get[i])); // erstellt aus dem get node ein array
-    clear.splice(0, 2); // Percent outputs ignorieren
-    for (let temp of clear) temp.value = ""; // löscht den inhalt der outputs
-    // clear.map(temp.value = null);
+  let ausgabe = []; // enthält die zu behandelnde elemente
+  for (var i = get.length; i--; ausgabe.unshift(get[i])); // erstellt aus dem get node ein array
+  ausgabe.splice(0, 2); // Percent outputs ignorieren
+  calculate();
+  // leert den Inhalt der Outputs
+  for (let ein of eingabe) deformat(ein.value) ? ausgabe.value : ausgabe = ausgabe.map(x => x.value = ""); 
+  setUpBearbeitungsgebühr();
   }
-  setUpBearbeitungsgebühr(); // kann trotzdem angezeigt werden, da nur von Tarifmodell abhängig
-}
 
 /* Funktionen abrufen */
 /* ------------------ */
@@ -112,24 +113,20 @@ function calculate() {
 /* Vertragsmodell konfiguration */
 /* ---------------------------- */
 var vertragsmodell = document.getElementById("vg");
-vertragsmodell.oninput = function() {
-  calculate();
-};
+vertragsmodell.oninput = () => configAusgabe();
 
 /* Tarifmodell konfiguration */
 /* ------------------------- */
 var tarifmodell = document.getElementById("tm");
-tarifmodell.oninput = function() {
-  setUpBearbeitungsgebühr();
-  calculate();
-};
+tarifmodell.oninput = () => configAusgabe();
 
 /* Kaufpreis konfiguration */
 /* ----------------------- */
 var kaufpreis = document.getElementById("kp");
 kaufpreis.oninput = function() {
-  input(kaufpreis);
+  configInput(kaufpreis);
   setUpKaufpreis();
+  // configAusgabe();
 };
 // überprüft, ob die inputs vom kaufpreis disabled wurden
 function setUpKaufpreis() {
@@ -142,9 +139,8 @@ function setUpKaufpreis() {
     restwertRange
   );
   // Inputs aktivieren wenn kaufpreis != leer
-  if (deformat(kaufpreis.value)) {
+  if (deformat(kaufpreis.value)) 
     for (let temp of input) temp.disabled = false;
-  }
   // inputs deaktivieren wenn kaufpreis ungültig oder 0
   else {
     for (let temp of input) {
@@ -165,12 +161,10 @@ var laufzeitRange = document.getElementById("lzr");
 
 laufzeitInput.oninput = function() {
   syncLaufzeit(false);
-  input(laufzeitInput);
-  checkEingabe(laufzeitInput);
+  configInput(laufzeitInput);
+  // configAusgabe();
 };
-laufzeitRange.oninput = function() {
-  syncLaufzeit(true);
-};
+laufzeitRange.oninput = () => syncLaufzeit(true);
 
 function syncLaufzeit(callingFromRange) {
   if (callingFromRange) laufzeitInput.value = format(laufzeitRange.value);
@@ -184,10 +178,10 @@ laufzeitInput.onchange = function() {
     temp = Math.round(parseFloat(temp));
     laufzeitInput.value = temp;
   }
-
   if (laufzeitInput.value < 24) laufzeitInput.value = 24;
   if (laufzeitInput.value > 72) laufzeitInput.value = 72;
 };
+laufzeitInput.onblur = () => configAusgabe();
 
 /* Eigenleistung konfigurieren */
 /* --------------------------- */
@@ -195,13 +189,11 @@ var eigenleistungInput = document.getElementById("eli");
 var eigenleistungRange = document.getElementById("elr");
 var eigenleistungPercent = document.getElementById("elp");
 
+eigenleistungRange.oninput = () => syncEigenleistung(true);
 eigenleistungInput.oninput = function() {
-  input(eigenleistungInput);
-  checkEingabe(eigenleistungInput);
+  configInput(eigenleistungInput);
   syncEigenleistung(false);
-};
-eigenleistungRange.oninput = function() {
-  syncEigenleistung(true);
+  // configAusgabe();
 };
 
 function changeEigenleistung() {
@@ -242,13 +234,11 @@ var restwertRange = document.getElementById("rwr");
 var restwertPercent = document.getElementById("rwp");
 
 restwertInput.oninput = function() {
-  input(restwertInput);
-  checkEingabe(restwertInput);
   syncRestwert(false);
+  configInput(restwertInput);
+  // configAusgabe(restwertInput);
 };
-restwertRange.oninput = function() {
-  syncRestwert(true);
-};
+restwertRange.oninput = () => syncRestwert(true);
 
 function changeRestwert() {
   // user benachrichtigen
