@@ -88,7 +88,8 @@ function configInput(input) {
 }
 // aktiviert ausgabe erst, wenn alle eingabe felder beschrieben sind
 function configAusgabe() {
-  var eingabe = Array (kaufpreis, laufzeitInput, eigenleistungInput, restwertInput);
+  // eigenleistung darf 0 sein
+  var eingabe = Array (kaufpreis, laufzeitInput, restwertInput);
     let get = document.getElementsByClassName("output");
   let ausgabe = []; // enthält die zu behandelnde elemente
   for (var i = get.length; i--; ausgabe.unshift(get[i])); // erstellt aus dem get node ein array
@@ -126,7 +127,6 @@ var kaufpreis = document.getElementById("kp");
 kaufpreis.oninput = function() {
   configInput(kaufpreis);
   setUpKaufpreis();
-  // configAusgabe();
 };
 // überprüft, ob die inputs vom kaufpreis disabled wurden
 function setUpKaufpreis() {
@@ -162,7 +162,6 @@ var laufzeitRange = document.getElementById("lzr");
 laufzeitInput.oninput = function() {
   syncLaufzeit(false);
   configInput(laufzeitInput);
-  // configAusgabe();
 };
 laufzeitRange.oninput = () => syncLaufzeit(true);
 
@@ -193,7 +192,6 @@ eigenleistungRange.oninput = () => syncEigenleistung(true);
 eigenleistungInput.oninput = function() {
   configInput(eigenleistungInput);
   syncEigenleistung(false);
-  // configAusgabe();
 };
 
 function changeEigenleistung() {
@@ -236,7 +234,6 @@ var restwertPercent = document.getElementById("rwp");
 restwertInput.oninput = function() {
   syncRestwert(false);
   configInput(restwertInput);
-  // configAusgabe(restwertInput);
 };
 restwertRange.oninput = () => syncRestwert(true);
 
