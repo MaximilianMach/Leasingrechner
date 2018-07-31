@@ -149,9 +149,6 @@ input:read-only {
 :disabled {
   background: #eeeeee69;
 }
-.small {
-  margin-left: 5px;
-}
 
 /*  <=< ------ >=> */
 /*  || Classes ||  */
@@ -161,7 +158,8 @@ input:read-only {
   text-align: left;
 }
 .small {
-  width: 50px;
+  width: 60px;
+  margin-left: 5px;
 }
 
 .user-input:hover {
